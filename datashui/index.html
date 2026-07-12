@@ -1,0 +1,3154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delayed Startup Tool Pro V2.0.2</title>
+<style>
+/* ============================================================
+   配色方案 — 1:1 还原 ui-redesign-v2.html
+   ============================================================ */
+:root {
+  --primary:        #2563eb;
+  --primary-hover:  #1d4ed8;
+  --primary-light:  #3b82f6;
+  --primary-soft:   #dbeafe;
+  --primary-bg:     #eff6ff;
+  --accent:         #0ea5e9;
+  --accent-soft:    #e0f2fe;
+  --bg:             #f8fafc;
+  --surface:        #ffffff;
+  --surface-alt:    #f1f5f9;
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+  --text:           #1e293b;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-inverse:   #ffffff;
+  --success:        #10b981;
+  --success-soft:   #d1fae5;
+  --warning:        #f59e0b;
+  --warning-soft:   #fef3c7;
+  --danger:         #ef4444;
+  --danger-soft:    #fee2e2;
+  --info:           #6366f1;
+  --info-soft:      #e0e7ff;
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.04);
+  --shadow-blue: 0 4px 14px rgba(37,99,235,.25);
+  --titlebar-grad: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+}
+body.dark {
+  --primary:        #3b82f6;
+  --primary-hover:  #60a5fa;
+  --primary-light:  #60a5fa;
+  --primary-soft:   #1e3a5f;
+  --primary-bg:     #0f1e3a;
+  --accent:         #38bdf8;
+  --accent-soft:    #0c2740;
+  --bg:             #0d1117;
+  --surface:        #161b22;
+  --surface-alt:    #1c2230;
+  --border:         #2d3548;
+  --border-strong:  #3d4659;
+  --text:           #e6edf3;
+  --text-secondary: #9aa7b8;
+  --text-muted:     #6b7689;
+  --text-inverse:   #ffffff;
+  --success:        #2dd4a7;
+  --success-soft:   #0d3b2e;
+  --warning:        #fbbf24;
+  --warning-soft:   #3d2f0d;
+  --danger:         #f87171;
+  --danger-soft:    #3d1515;
+  --info:           #818cf8;
+  --info-soft:      #1e1b4b;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.3);
+  --shadow:     0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.2);
+  --shadow-blue: 0 4px 14px rgba(59,130,246,.3);
+  --titlebar-grad: linear-gradient(135deg, #0d1117 0%, #1e3a5f 100%);
+}
+
+/* ============================================================
+   基础重置
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+
+/* ============================================================
+   窗口容器 — 嵌入 WPF 时填满视口
+   ============================================================ */
+.window {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  background: var(--surface);
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  border: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   标题栏
+   ============================================================ */
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  background: var(--titlebar-grad);
+  color: var(--text-inverse);
+  position: relative;
+  -webkit-app-region: drag;
+}
+.titlebar-icon {
+  width: 22px; height: 22px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.18);
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 12px;
+  font-size: 16px;
+}
+.titlebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  flex: 1;
+}
+.titlebar-version {
+  font-size: 11px;
+  opacity: .7;
+  margin-left: 8px;
+  font-weight: 400;
+}
+.window-controls {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.win-btn {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.win-btn:hover { filter: brightness(1.15); }
+.win-min  { background: #fbbf24; }
+.win-close{ background: #f87171; }
+
+/* 主题切换 */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  margin-right: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.18);
+  color: var(--text-inverse);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+}
+.theme-toggle:hover { background: rgba(255,255,255,.22); }
+.theme-toggle svg { width: 14px; height: 14px; flex-shrink: 0; }
+body.dark .theme-toggle {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.1);
+}
+
+/* ============================================================
+   工具栏 + 标签页
+   ============================================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 38px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+}
+.tab {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tab svg { width: 14px; height: 14px; }
+.tab:hover { background: var(--surface-alt); color: var(--text); }
+.tab.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+.tab .tab-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 0 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+.tab.active .tab-badge { background: var(--primary); color: var(--text-inverse); }
+
+.toolbar-spacer { flex: 1; }
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+}
+.toolbar-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+.toolbar-btn svg { width: 13px; height: 13px; }
+
+/* ============================================================
+   主内容区
+   ============================================================ */
+.content {
+  padding: 14px 16px;
+  background: var(--bg);
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   统一滚动条样式（所有页面列表共用）
+   ============================================================ */
+html { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--primary); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+body.dark ::-webkit-scrollbar-thumb { background: var(--text-muted); background-clip: content-box; }
+body.dark ::-webkit-scrollbar-thumb:hover { background: var(--primary); background-clip: content-box; }
+body.dark html { scrollbar-color: var(--text-muted) transparent; }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: flex; flex-direction: column; height: 100%; overflow: hidden; animation: fadeIn .2s ease-out; }
+/* 一键优化面板内容较长，整体独立滚动（不使用固定头部布局） */
+#pane-optimize.tab-pane.active { display: block; overflow-y: auto; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* —— 列表头 —— */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  background: var(--bg);
+  padding-top: 4px;
+  padding-bottom: 6px;
+}
+.list-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.count-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+.list-actions { display: flex; gap: 6px; }
+
+/* —— 按钮 —— */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+.btn-primary {
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-blue);
+}
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+.btn-secondary:hover {
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+.btn-danger {
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+.btn-danger:hover { background: var(--danger-soft); }
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+}
+.btn-ghost:hover { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.btn-test {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: var(--success-soft);
+}
+.btn-test:hover {
+  background: var(--success);
+  color: var(--text-inverse);
+  border-color: var(--success);
+}
+.btn-stop {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+.btn-stop:hover {
+  background: var(--danger);
+  color: var(--text-inverse);
+  border-color: var(--danger);
+}
+
+/* ============================================================
+   启动项列表
+   ============================================================ */
+.startup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.startup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all .2s;
+  position: relative;
+}
+.startup-item:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.startup-item.selected {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  box-shadow: var(--shadow-blue);
+}
+.startup-item.disabled { opacity: .55; }
+.startup-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 4px; height: 60%;
+  background: var(--primary);
+  border-radius: 0 4px 4px 0;
+}
+
+/* —— 图标 —— */
+.item-icon {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.item-icon.blue   { background: var(--primary-soft); }
+.item-icon.green  { background: var(--success-soft); }
+.item-icon.purple { background: var(--info-soft); }
+.item-icon.orange { background: var(--warning-soft); }
+.item-icon.cyan   { background: var(--accent-soft); }
+.item-icon.red    { background: var(--danger-soft); }
+
+/* —— 名称和路径 —— */
+.item-info { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.item-path {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* —— 状态标签 —— */
+.status-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.status-tag::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+}
+.status-active   { color: var(--success); background: var(--success-soft); }
+.status-active::before   { background: var(--success); }
+.status-delayed  { color: var(--warning); background: var(--warning-soft); }
+.status-delayed::before  { background: var(--warning); }
+.status-disabled { color: var(--text-muted); background: var(--surface-alt); }
+.status-disabled::before { background: var(--text-muted); }
+
+/* —— 来源标签 (系统启动项) —— */
+.source-tag {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+.source-registry { color: var(--info); background: var(--info-soft); border-color: transparent; }
+.source-folder   { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.source-task     { color: var(--warning); background: var(--warning-soft); border-color: transparent; }
+
+/* —— 拖拽手柄 —— */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.drag-handle:hover,
+.startup-item:hover .drag-handle {
+  opacity: 0.6;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* —— 延迟滑块 —— */
+.delay-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 210px;
+}
+.delay-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.slider-wrap {
+  flex: 1;
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  user-select: none;
+}
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(37,99,235,.4);
+  cursor: grab;
+  transition: transform .1s;
+}
+.slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.15); }
+.slider:disabled { opacity: .4; }
+body.dark .slider { background: var(--border-strong); }
+body.dark .slider::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--primary-soft), 0 2px 6px rgba(0,0,0,.35);
+}
+body.dark .slider-ticks span { color: var(--text-secondary); }
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1px;
+  padding: 0 1px;
+}
+.slider-ticks span { font-size: 8px; color: var(--text-muted); }
+.delay-value {
+  min-width: 42px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all .15s;
+}
+.delay-value:hover { background: var(--primary-bg); }
+.delay-value .unit { font-size: 11px; font-weight: 500; opacity: .7; }
+.delay-input {
+  width: 50px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* —— 备注 & 参数 —— */
+.item-comment {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.item-comment svg { width: 10px; height: 10px; flex-shrink: 0; }
+.item-args {
+  font-size: 9px;
+  color: var(--info);
+  background: var(--info-soft);
+  padding: 0 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+/* —— 拖拽 —— */
+.startup-item.dragging { opacity: .4; border-style: dashed; }
+.startup-item.drag-over { border-top: 2px solid var(--primary); }
+
+body.drag-file-active .content {
+  outline: 2px dashed var(--primary);
+  outline-offset: -4px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   底部操作栏
+   ============================================================ */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.bottom-bar .label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-right: 4px;
+}
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+}
+.action-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+  box-shadow: var(--shadow-sm);
+}
+.action-btn svg { width: 14px; height: 14px; }
+.bottom-spacer { flex: 1; }
+.mode-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 模式切换 */
+.mode-toggle {
+  display: inline-flex;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.mode-option:hover { color: var(--text-secondary); }
+.mode-option.active {
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.mode-option svg { width: 13px; height: 13px; }
+
+/* 更多按钮下拉 */
+.more-wrapper { position: relative; }
+.more-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 1000;
+  min-width: 180px;
+}
+.more-menu.show { display: block; }
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background .1s;
+  white-space: nowrap;
+}
+.more-menu-item:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.more-menu-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+.more-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ============================================================
+   状态栏
+   ============================================================ */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 16px;
+  background: var(--surface-alt);
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.status-item { display: flex; align-items: center; gap: 5px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+/* ============================================================
+   右键菜单
+   ============================================================ */
+.context-menu {
+  display: none;
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 1000;
+  min-width: 160px;
+}
+.context-menu.show { display: block; }
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.context-menu-item:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.context-menu-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+.context-menu-item-primary {
+  color: var(--primary);
+  font-weight: 600;
+}
+.context-menu-item-primary:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.context-menu-item-has-sub {
+  position: relative;
+  padding-right: 10px;
+}
+.context-menu-item-has-sub .sub-arrow {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  opacity: .45;
+  flex-shrink: 0;
+}
+.context-submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: -5px;
+  margin-left: 2px;
+  min-width: 168px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 1001;
+}
+.context-menu-item-has-sub:hover > .context-submenu {
+  display: block;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ============================================================
+   系统启动项扫描面板
+   ============================================================ */
+.scan-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+#systemItemsList {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.scan-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.scan-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.scan-stats .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.scan-stats .stat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.scan-stats .stat-dot.registry { background: var(--info); }
+.scan-stats .stat-dot.folder   { background: var(--accent); }
+.scan-stats .stat-dot.task     { background: var(--warning); }
+
+.scan-btn {
+  display: inline-flex;
+  position: relative;
+  z-index: 2;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-inverse);
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s, filter .15s;
+  box-shadow: var(--shadow-blue);
+}
+.scan-btn:hover { background: var(--primary-hover); filter: brightness(1.08); box-shadow: 0 4px 12px rgba(37,99,235,.35); }
+.scan-btn.scanning {
+  background: var(--text-muted);
+  cursor: wait;
+  pointer-events: none;
+}
+.scan-btn svg { width: 14px; height: 14px; }
+.scan-btn .spin {
+  animation: spin .8s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 系统启动项分组标题 */
+.source-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.source-group-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* 导入按钮 */
+.btn-import {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid transparent;
+  font-size: 10px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+.btn-import:hover {
+  background: var(--success);
+  color: var(--text-inverse);
+}
+.btn-restore {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid transparent;
+  font-size: 10px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+.btn-restore:hover {
+  background: #d97706;
+  color: #fff;
+}
+
+/* ============================================================
+   一键优化面板
+   ============================================================ */
+.optimize-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.optimize-chart {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  position: relative;
+}
+.optimize-chart svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.optimize-chart .ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
+}
+.optimize-chart .ring-fg {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .6s ease-out;
+}
+.optimize-chart-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.optimize-chart-center .value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+.optimize-chart-center .label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.optimize-info { flex: 1; }
+.optimize-info h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.optimize-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.optimize-metrics {
+  display: flex;
+  gap: 16px;
+}
+.optimize-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.optimize-metric .metric-value {
+  font-size: 18px;
+  font-weight: 800;
+}
+.optimize-metric .metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.optimize-metric .before { color: var(--danger); text-decoration: line-through; opacity: .7; }
+.optimize-metric .after  { color: var(--success); }
+.optimize-metric .saved  { color: var(--primary); }
+
+.optimize-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+.btn-optimize {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-inverse);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: var(--shadow-blue);
+}
+.btn-optimize:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37,99,235,.35);
+}
+.btn-optimize svg { width: 16px; height: 16px; }
+.btn-optimize.applied {
+  background: var(--success);
+  pointer-events: none;
+}
+
+/* 优化建议列表 */
+.optimize-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  transition: all .15s;
+}
+.optimize-suggestion:hover { border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
+
+.suggestion-category {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.cat-system    { color: var(--danger); background: var(--danger-soft); }
+.cat-network   { color: var(--accent); background: var(--accent-soft); }
+.cat-comm      { color: var(--success); background: var(--success-soft); }
+.cat-office    { color: var(--info); background: var(--info-soft); }
+.cat-tool      { color: var(--warning); background: var(--warning-soft); }
+.cat-heavy     { color: var(--primary); background: var(--primary-soft); }
+
+.suggestion-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.suggestion-change .old {
+  color: var(--danger);
+  text-decoration: line-through;
+  opacity: .6;
+}
+.suggestion-change .arrow { color: var(--text-muted); }
+.suggestion-change .new {
+  color: var(--success);
+  font-weight: 700;
+}
+.suggestion-reason {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-style: italic;
+}
+
+/* ============================================================
+   弹窗
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 320px;
+  max-width: 480px;
+  overflow: hidden;
+  animation: modalFadeIn 0.15s ease-out;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+.modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.modal-close {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  color: var(--text-muted);
+  cursor: pointer; border-radius: 4px;
+  transition: all 0.15s;
+}
+.modal-close:hover { background: var(--border); color: var(--text); }
+.modal-body { padding: 16px; }
+.modal-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.modal-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.modal-btn-secondary {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+.modal-btn-secondary:hover {
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+.modal-btn-primary {
+  background: var(--primary);
+  color: var(--text-inverse);
+}
+.modal-btn-primary:hover { background: var(--primary-hover); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text);
+  color: var(--surface);
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 20000;
+  opacity: 0;
+  transition: all .3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast svg { width: 16px; height: 16px; }
+.toast.success { background: var(--success); color: #fff; }
+.toast.error   { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     UI 窗口 — 1:1 还原 ui-redesign-v2.html
+     ============================================================ -->
+<div class="window" id="appWindow">
+
+  <!-- 标题栏 -->
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-icon">
+      <svg width="16" height="16" viewBox="0 0 1024 1024" class="icon">
+        <path d="M640 640m-332.8 0a332.8 332.8 0 1 0 665.6 0 332.8 332.8 0 1 0-665.6 0Z" fill="#5AC8FA"/>
+        <path d="M512 972.8c256 0 460.8-204.8 460.8-460.8s-204.8-460.8-460.8-460.8-460.8 204.8-460.8 460.8 204.8 460.8 460.8 460.8z m0 51.2C230.4 1024 0 793.6 0 512S230.4 0 512 0s512 230.4 512 512-230.4 512-512 512z m25.6-537.6h204.8c15.36 0 25.6 10.24 25.6 25.6s-10.24 25.6-25.6 25.6H512c-15.36 0-25.6-10.24-25.6-25.6V128c0-15.36 10.24-25.6 25.6-25.6s25.6 10.24 25.6 25.6v358.4z" fill="#fff"/>
+     </svg>
+    </div>
+    <div class="titlebar-title">
+      Delayed Startup Tool Pro
+      <span class="titlebar-version">V2.0.2</span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="切换深色/浅色主题">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <span id="themeLabel">深色</span>
+    </button>
+    <div class="window-controls">
+      <button class="win-btn win-min" id="btnMin" title="最小化"></button>
+      <button class="win-btn win-close" id="btnClose" title="关闭"></button>
+    </div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <div class="tab active" data-tab="my-items">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+      我的启动项
+      <span class="tab-badge" id="myItemsBadge">0</span>
+    </div>
+    <div class="tab" data-tab="system-items">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      系统启动项
+      <span class="tab-badge" id="sysItemsBadge">0</span>
+    </div>
+    <div class="tab" data-tab="optimize">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      一键优化
+    </div>
+    <div class="toolbar-spacer"></div>
+    <button class="toolbar-btn" id="saveConfigBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      保存配置
+    </button>
+    <button class="toolbar-btn" id="helpBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      帮助
+    </button>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="content">
+
+    <!-- ====== Tab 1: 我的启动项 ====== -->
+    <div class="tab-pane active" id="pane-my-items">
+      <div class="list-header">
+        <div class="list-title">
+          启动项列表
+          <span class="count-badge" id="myItemsCount">0 项</span>
+        </div>
+        <div class="list-actions">
+          <button class="btn btn-primary" id="addBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            添加
+          </button>
+          <button class="btn btn-secondary" id="moveUpBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+            上移
+          </button>
+          <button class="btn btn-secondary" id="moveDownBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            下移
+          </button>
+          <button class="btn btn-danger" id="deleteBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            删除
+          </button>
+          <button class="btn btn-ghost" id="clearBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 1.4-3.4L13 8l-4 4 8.6 8.6a2 2 0 0 0 1.4.4z"/><path d="M13 8l-1.5-1.5A2 2 0 0 0 10 6H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/><line x1="6" y1="14" x2="9" y2="17"/></svg>
+            清空
+          </button>
+        </div>
+      </div>
+      <div class="startup-list" id="startupList"></div>
+    </div>
+
+    <!-- ====== Tab 2: 系统启动项 ====== -->
+    <div class="tab-pane" id="pane-system-items">
+      <div class="scan-header">
+        <div class="scan-info">
+          <div class="list-title">
+            系统启动项扫描
+            <span class="count-badge" id="sysItemsCount">未扫描</span>
+          </div>
+          <div class="scan-stats" id="scanStats" style="display:none">
+            <div class="stat-item"><span class="stat-dot registry"></span> 注册表 <span id="regCount">0</span></div>
+            <div class="stat-item"><span class="stat-dot folder"></span> 启动文件夹 <span id="folderCount">0</span></div>
+            <div class="stat-item"><span class="stat-dot task"></span> 计划任务 <span id="taskCount">0</span></div>
+          </div>
+          <div id="scanTimeDisplay" style="font-size:10px;color:var(--text-muted);margin-top:2px;display:none;"></div>
+        </div>
+        <button class="scan-btn" id="scanBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>扫描系统启动项</span>
+        </button>
+      </div>
+      <div id="systemItemsList">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center;padding:40px 20px;color:var(--text-muted)">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3;margin-bottom:10px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">点击上方按钮扫描系统启动项</div>
+          <div style="font-size:11px">将读取注册表 Run 键、启动文件夹、计划任务中的所有自启动程序</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== Tab 3: 一键优化 ====== -->
+    <div class="tab-pane" id="pane-optimize">
+      <div class="optimize-hero">
+        <div class="optimize-chart">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="50"/>
+            <circle class="ring-fg" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314" id="optimizeRing"/>
+          </svg>
+          <div class="optimize-chart-center">
+            <div class="value" id="optimizeScore">--</div>
+            <div class="label">优化评分</div>
+          </div>
+        </div>
+        <div class="optimize-info">
+          <h3>智能启动优化</h3>
+          <p>根据程序类型自动分配最佳延迟时间，避免开机时所有程序同时启动导致系统卡顿</p>
+          <div class="optimize-metrics">
+            <div class="optimize-metric">
+              <span class="metric-value before" id="metricBefore">--s</span>
+              <span class="metric-label">当前总延迟</span>
+            </div>
+            <div class="optimize-metric">
+              <span class="metric-value after" id="metricAfter">--s</span>
+              <span class="metric-label">优化后总延迟</span>
+            </div>
+            <div class="optimize-metric">
+              <span class="metric-value saved" id="metricSaved">--s</span>
+              <span class="metric-label">预计节省</span>
+            </div>
+          </div>
+        </div>
+        <div class="optimize-actions">
+          <button class="btn-optimize" id="applyOptimizeBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            一键优化
+          </button>
+          <button class="btn btn-secondary" id="resetOptimizeBtn" style="justify-content:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            恢复默认
+          </button>
+        </div>
+      </div>
+
+      <div class="list-header">
+        <div class="list-title">优化建议明细</div>
+      </div>
+      <div id="optimizeSuggestions"></div>
+    </div>
+
+  </div>
+
+  <!-- 底部操作栏 -->
+  <div class="bottom-bar">
+    <span class="mode-label">启动模式</span>
+    <div class="mode-toggle" id="modeToggle">
+      <div class="mode-option active" data-mode="gui">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        图形界面
+      </div>
+      <div class="mode-option" data-mode="bat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        命令行
+      </div>
+      <div class="mode-option" data-mode="hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        后台隐藏
+      </div>
+    </div>
+    <div class="bottom-spacer"></div>
+    <button class="action-btn" id="addToStartupBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+      添加到开机启动
+    </button>
+    <button class="btn btn-test" id="testBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      测试启动
+    </button>
+    <button class="btn btn-stop" id="stopBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+      停止启动
+    </button>
+    <div class="more-wrapper">
+      <button class="action-btn" id="moreBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        更多
+      </button>
+      <div class="more-menu" id="moreMenu">
+        <div class="more-menu-item" data-action="remove-startup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          移除开机启动
+        </div>
+        <div class="more-menu-item" data-action="open-startup-dir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          打开启动文件夹
+        </div>
+        <div class="more-menu-item" data-action="create-shortcut">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+          创建桌面快捷方式
+        </div>
+        <div class="more-menu-divider"></div>
+        <div class="more-menu-item" data-action="about">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          关于
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 状态栏 -->
+  <div class="statusbar">
+    <div class="status-item">
+      <span class="status-dot"></span>
+      运行正常
+    </div>
+    <div class="status-item" id="statusConfig">已配置 0 项</div>
+    <div class="status-item" id="statusTime">总延迟 0 秒</div>
+    <div style="flex:1"></div>
+    <div class="status-item">Delayed Startup Tool Pro V2.0.2</div>
+  </div>
+
+</div>
+
+<!-- 右键菜单 -->
+<div class="context-menu" id="contextMenu">
+  <div class="context-menu-item context-menu-item-primary" data-action="launch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    立即启动
+  </div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item context-menu-item-has-sub" data-action="__edit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+    编辑
+    <svg class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div class="context-submenu">
+  <div class="context-menu-item" data-action="edit-path">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    编辑路径
+  </div>
+  <div class="context-menu-item" data-action="edit-args">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+    编辑启动参数
+  </div>
+  <div class="context-menu-item" data-action="edit-comment">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    编辑备注
+  </div>
+    </div>
+  </div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item" data-action="open-dir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    打开所在目录
+  </div>
+  <div class="context-menu-item" data-action="create-shortcut">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+    创建桌面快捷方式
+  </div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item" data-action="toggle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+    启用/禁用
+  </div>
+  <div class="context-menu-item" data-action="delete" style="color:var(--danger)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    删除
+  </div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">提示</div>
+      <button class="modal-close" id="modalClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-message" id="modalMessage"></div>
+      <input class="modal-input" id="modalInput" style="display:none" type="text">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" id="modalCancel">取消</button>
+      <button class="modal-btn modal-btn-primary" id="modalOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastText">操作成功</span>
+</div>
+
+<script>
+// ============================================================
+// C# 桥接 — WebView2 消息通信
+// ============================================================
+const IS_EMBEDDED = typeof window.chrome !== 'undefined' && window.chrome.webview;
+
+function sendToCSharp(action, data = {}) {
+  if (!IS_EMBEDDED) return;
+  try {
+    window.chrome.webview.postMessage(JSON.stringify({ action, ...data }));
+  } catch (e) {
+    console.error('[C#] 发送消息失败:', action, e);
+  }
+}
+
+// ============================================================
+// 全局错误兜底 — 防止单个脚本错误导致整页白屏 / 功能失效
+// ============================================================
+let _globalErrorShown = false;
+function reportGlobalError(msg, stack) {
+  try { console.error('[GlobalError]', msg, stack || ''); } catch { /* ignore */ }
+  if (_globalErrorShown) return;
+  _globalErrorShown = true;
+  if (typeof showToast === 'function') {
+    const short = String(msg || '未知错误').replace(/\s+/g, ' ').slice(0, 120);
+    showToast('界面错误：' + short, 'error');
+    setTimeout(() => { _globalErrorShown = false; }, 5000);
+  }
+  // 同时把错误上报 C# 写入日志，便于定位
+  try {
+    if (IS_EMBEDDED && typeof sendToCSharp === 'function') {
+      sendToCSharp('jsError', { message: String(msg || ''), stack: String(stack || '') });
+    }
+  } catch { /* ignore */ }
+}
+window.addEventListener('error', (e) => {
+  reportGlobalError((e.message || '未知错误') + (e.filename ? ` @ ${e.filename}:${e.lineno}` : ''), e.error && e.error.stack);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const r = e.reason;
+  reportGlobalError('Promise 未处理: ' + (r && r.message ? r.message : String(r)), r && r.stack);
+});
+
+// ============================================================
+// 数据模型 — 从 C# 加载真实数据
+// ============================================================
+let startupItems = [];
+let systemItems = [];
+let currentMode = 'gui';
+let isInStartup = false;
+let optimizationBackup = null; // 非嵌入模式下，记录「一键优化前」的延迟
+
+// 程序分类规则 —— 与 C# 一键优化算法 v2 保持一致（按类型 + 特定软件）
+const categoryRules = [
+  { cat: 'office',  label: '浏览器/办公', color: 'cat-office', keywords: ['chrome','edge','firefox','opera','brave','vivaldi','safari','浏览器','360se','360浏览器','360安全浏览器','搜狗浏览器','2345浏览器','百分浏览器','qq浏览器','excel','word','powerpoint','outlook','wps','office','onenote','access','project','visio','mindmanager','xmind','幕布','印象笔记','evernote','notion','语雀'], suggestedDelay: 8 },
+  { cat: 'tool',    label: '压缩/解压', color: 'cat-tool',   keywords: ['winrar','7-zip','7zip','7z','bandizip','peazip','winzip','好压','2345好压','360压缩','压缩'], suggestedDelay: 10 },
+  { cat: 'network', label: '网络工具', color: 'cat-network', keywords: ['clash','vpn','proxy','v2ray','v2rayn','ssr','shadowsocks','trojan','wireguard','openvpn','netch','nps','frp','natfrp','ngrok','花生壳','zerotier','tailscale','tunnel','lanthing','proxifier','network'], suggestedDelay: 3 },
+  { cat: 'comm',    label: '通讯社交', color: 'cat-comm',    keywords: ['wechat','微信','qq','tim','qqnt','dingtalk','钉钉','telegram','飞书','feishu','lark','slack','discord','skype','yy语音','yy','企业微信','wework','网易邮箱','foxmail','thunderbird','邮件','mail','whatsapp','line','kakaotalk'], suggestedDelay: 5 },
+  { cat: 'tool',    label: '影音播放', color: 'cat-tool',   keywords: ['potplayer','vlc','mpv','kmplayer','qq影音','iqiyi','爱奇艺','腾讯视频','优酷','bilibili','哔哩哔哩','foobar','网易云音乐','qq音乐','spotify','netease','kugou','酷狗','kuwo','酷我','music','player'], suggestedDelay: 10 },
+  { cat: 'tool',    label: '下载/网盘', color: 'cat-tool',   keywords: ['idm','fdm','download','下载','thunder','迅雷','aria2','qbittorrent','utorrent','比特彗星','百度网盘','baidunetdisk','阿里云盘','aliyun','terabox','115'], suggestedDelay: 10 },
+  { cat: 'tool',    label: '编辑器/小工具', color: 'cat-tool', keywords: ['notepad','sublime','vscode','code','editor','notepad++','notepad--','typora','obsidian','vim','emacs','cursor','trae'], suggestedDelay: 10 },
+  { cat: 'tool',    label: '截图/效率', color: 'cat-tool',   keywords: ['everything','listary','wox','utools','quicker','snipaste','capture','fscapture','fsrecorder','截图','hibit','localsend','geek','trafficmonitor','wallpaper','translator','有道','金山词霸','ditto','clipy'], suggestedDelay: 10 },
+  { cat: 'tool',    label: '远程控制', color: 'cat-tool',   keywords: ['向日葵','todesk','anydesk','teamviewer','parsec','rustdesk','remote','远程'], suggestedDelay: 10 },
+  { cat: 'heavy',   label: '大型软件(设计/IDE/虚拟机/游戏/科学)', color: 'cat-heavy', keywords: ['autocad','cad','corel','coreldraw','photoshop','illustrator','premiere','after effects','lightroom','indesign','dreamweaver','sketch','figma','blender','maya','3ds max','3dsmax','cinema4d','c4d','houdini','zbrush','达芬奇','davinci','visual studio','eclipse','android studio','intellij','idea','pycharm','webstorm','rider','clion','goland','phpstorm','netbeans','devcpp','codeblocks','vs code','docker','vmware','virtualbox','vagrant','hyperv','wsl','parallels','模拟器','emulator','雷电','ldplayer','mumu','夜神','nox','steam','epic','epicgames','wegame','origin','uplay','battlenet','battle.net','ea app','eaapp','gog','rockstar','riot','英雄联盟','lol','腾讯游戏','xbox','matlab','anaconda','jupyter','spss','stata','minitab','tableau','powerbi'], suggestedDelay: 15 },
+  { cat: 'system',  label: '系统安全', color: 'cat-system',  keywords: ['360安全','360杀毒','360卫士','360safe','360sd','安全','杀毒','防毒','firewall','defender','guard','火绒','kaspersky','avast','avg','bitdefender','mcafee','norton','eset','卡巴斯基','瑞星','毒霸','电脑管家','管家'], suggestedDelay: 0 },
+  { cat: 'system',  label: '驱动/硬件', color: 'cat-system',  keywords: ['driver','驱动','realtek','rthdvor','nvidia','nvcontainer','amd','radeon','intel','bluetooth','btvstack','hotkey','hkcmd','igfx','touchpad','pointstick','lenovo','dolby','audio','sound','synaptics','elan','logitech','dell','asus','hp','msi','razer','thunderbolt','camera','指纹','fingerprint'], suggestedDelay: 0 },
+  { cat: 'system',  label: '系统/更新', color: 'cat-system',  keywords: ['windows','microsoft','system','sysmain','svchost','update','更新','onedrive','geforce experience','nvidia geforce','armoury','armourycrate','adobe genuine','adobe gpu','rundll32'], suggestedDelay: 0 },
+  { cat: 'system',  label: '系统辅助', color: 'cat-system',  keywords: ['输入法','ime','sogou','搜狗输入法','搜狗拼音','百度输入法','百度拼音','qq输入法','qq拼音','微软拼音','wubi','五笔','ctfmon','tray','托盘','notify','通知','时钟','clock','volume','音量','powertoys','quickstep'], suggestedDelay: 2 },
+];
+
+function categorizeItem(name) {
+  const lower = name.toLowerCase();
+  for (const rule of categoryRules) {
+    for (const kw of rule.keywords) {
+      if (lower.includes(kw.toLowerCase())) return rule;
+    }
+  }
+  return { cat: 'tool', label: '其他工具', color: 'cat-tool', suggestedDelay: 10 };
+}
+
+// ============================================================
+// 工具函数 — 1:1 还原 ui-redesign-v2.html
+// ============================================================
+function getFileName(path) {
+  if (!path) return '';
+  const parts = path.replace(/\\/g, '/').split('/');
+  return parts[parts.length - 1] || path;
+}
+
+function getDisplayName(item) {
+  return getFileName(item.filePath).replace(/\.(exe|lnk|bat|cmd)$/i, '');
+}
+
+// 取文件后缀（不含点），如 .exe -> "exe"
+function getFileExt(path) {
+  if (!path) return '';
+  const m = path.replace(/\\/g, '/').match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : '';
+}
+
+// 品牌特例：特定知名软件优先用专属图标（用户要求的“特定软件除外”）
+function getBrandedIcon(name) {
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('360') || lower.includes('dns') || lower.includes('安全') || lower.includes('杀毒') || lower.includes('defender') || lower.includes('firewall'))
+    return { cls: 'red', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' };
+  if (lower.includes('chrome') || lower.includes('edge') || lower.includes('浏览器') || lower.includes('opera') || lower.includes('firefox') || lower.includes('brave'))
+    return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>' };
+  if (lower.includes('wechat') || lower.includes('微信') || lower.includes('qq') || lower.includes('钉钉') || lower.includes('telegram') || lower.includes('企业微信'))
+    return { cls: 'green', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="13" x2="13" y2="13"/></svg>' };
+  if (lower.includes('cad') || lower.includes('corel') || lower.includes('autocad') || lower.includes('photoshop') || lower.includes('illustrator') || lower.includes('premiere'))
+    return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>' };
+  if (lower.includes('office') || lower.includes('excel') || lower.includes('word') || lower.includes('powerpoint') || lower.includes('wps'))
+    return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>' };
+  if (lower.includes('vpn') || lower.includes('clash') || lower.includes('proxy') || lower.includes('v2ray') || lower.includes('ssr'))
+    return { cls: 'green', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>' };
+  if (lower.includes('visual') || lower.includes('eclipse') || lower.includes('android') || lower.includes('studio'))
+    return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 18h6"/></svg>' };
+  // 压缩软件
+  if (lower.includes('winrar') || lower.includes('7-zip') || lower.includes('7zip') || lower.includes('7-z') || lower.includes('bandizip') || lower.includes('peazip') || lower.includes('winzip') || lower.includes('好压') || lower.includes('360压缩') || lower.includes('2345好压'))
+    return { cls: 'orange', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>' };
+  // 影音播放器
+  if (lower.includes('vlc') || lower.includes('potplayer') || lower.includes('kmplayer') || lower.includes('qq影音') || lower.includes('iqiyi') || lower.includes('爱奇艺') || lower.includes('腾讯视频') || lower.includes('优酷') || lower.includes('bilibili') || lower.includes('哔哩哔哩') || lower.includes('foobar') || lower.includes('网易云') || lower.includes('qq音乐'))
+    return { cls: 'red', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M2 16h20M7 4v16M17 4v16"/></svg>' };
+  return null;
+}
+
+// 按文件后缀返回通用类型图标（避免所有项都长一个样）
+function getTypeIcon(ext) {
+  switch (ext) {
+    // —— 程序 / 快捷方式 ——
+    case 'exe':
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/><path d="M9 18h6"/></svg>' };
+    case 'lnk':
+      return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><path d="M14 3l5 5h-5z"/><path d="M16 11l3-3 3 3"/><path d="M19 8v3"/></svg>' };
+    // —— 脚本 / 代码 ——
+    case 'bat':
+    case 'cmd':
+      return { cls: 'green', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>' };
+    case 'ps1':
+    case 'vbs':
+    case 'ahk':
+    case 'js':
+    case 'ts':
+      return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 7 4 12 8 17"/><polyline points="16 7 20 12 16 17"/><line x1="13" y1="6" x2="11" y2="18"/></svg>' };
+    case 'py':
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8c0-1 2-1 2 0s-2 1-2 2 2 1 2 2 2 1 2 0"/><path d="M15 8c0-1-2-1-2 0s2 1 2 2-2 1-2 2 2 1 2 0"/></svg>' };
+    case 'jar':
+      return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h12v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/><line x1="8" y1="3" x2="8" y2="5"/><line x1="11" y1="3" x2="11" y2="5"/></svg>' };
+    // —— 网络 / 应用 ——
+    case 'url':
+    case 'website':
+      return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>' };
+    case 'appref-ms':
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg>' };
+    case 'msi':
+    case 'msp':
+      return { cls: 'orange', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>' };
+    case 'appx':
+    case 'appxbundle':
+      return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>' };
+    // —— 图片 ——
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'bmp':
+    case 'webp':
+    case 'heic':
+    case 'svg':
+    case 'tif':
+    case 'tiff':
+    case 'ico':
+    case 'avif':
+      return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' };
+    // —— 视频 ——
+    case 'mp4':
+    case 'mkv':
+    case 'avi':
+    case 'mov':
+    case 'wmv':
+    case 'flv':
+    case 'webm':
+    case 'm4v':
+    case 'mpg':
+    case 'mpeg':
+      return { cls: 'red', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M2 16h20M7 4v16M17 4v16"/></svg>' };
+    // —— 音频 ——
+    case 'mp3':
+    case 'wav':
+    case 'flac':
+    case 'aac':
+    case 'ogg':
+    case 'm4a':
+    case 'wma':
+    case 'ape':
+      return { cls: 'green', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>' };
+    // —— 压缩包 ——
+    case 'zip':
+    case 'rar':
+    case '7z':
+    case 'tar':
+    case 'gz':
+    case 'bz2':
+    case 'xz':
+    case 'iso':
+    case 'cab':
+    case 'zst':
+      return { cls: 'orange', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>' };
+    // —— Word / 文档 ——
+    case 'doc':
+    case 'docx':
+    case 'rtf':
+    case 'odt':
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>' };
+    // —— Excel / 表格 ——
+    case 'xls':
+    case 'xlsx':
+    case 'csv':
+    case 'ods':
+      return { cls: 'green', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>' };
+    // —— PowerPoint / 演示 ——
+    case 'ppt':
+    case 'pptx':
+    case 'odp':
+      return { cls: 'orange', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M16 8l6-3v10l-6-3z"/><line x1="5" y1="20" x2="13" y2="20"/></svg>' };
+    // —— PDF ——
+    case 'pdf':
+      return { cls: 'red', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1.5a1.5 1.5 0 0 1 0 3H9v-3zM9 16v3M12 13v6"/></svg>' };
+    // —— 纯文本 / 代码文件 ——
+    case 'txt':
+    case 'md':
+    case 'json':
+    case 'xml':
+    case 'log':
+    case 'cfg':
+    case 'ini':
+    case 'yaml':
+    case 'yml':
+      return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="14" y2="16"/></svg>' };
+    // —— 3D / CAD ——
+    case 'dwg':
+    case 'dxf':
+    case 'stp':
+    case 'step':
+    case 'skp':
+    case 'blend':
+    case 'c4d':
+    case 'fbx':
+      return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 2v10M12 12l9-5M12 12l-9-5"/></svg>' };
+    // —— 字体 ——
+    case 'ttf':
+    case 'otf':
+    case 'woff':
+    case 'woff2':
+      return { cls: 'cyan', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l4-12 4 12M5.5 14h5"/><path d="M14 18l3-9 3 9M15 15h4"/></svg>' };
+    // —— 数据库 ——
+    case 'db':
+    case 'sqlite':
+    case 'sql':
+    case 'mdb':
+    case 'accdb':
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>' };
+    // —— 种子 ——
+    case 'torrent':
+      return { cls: 'purple', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="6" y1="4" x2="6" y2="9"/><line x1="18" y1="4" x2="18" y2="9"/><circle cx="12" cy="20" r="1.5"/></svg>' };
+    default:
+      return { cls: 'blue', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/></svg>' };
+  }
+}
+
+function getIconClass(name, path) {
+  const branded = getBrandedIcon(name);
+  if (branded) return branded.cls;
+  return getTypeIcon(getFileExt(path || name)).cls;
+}
+
+function getIconSvg(name, path) {
+  const branded = getBrandedIcon(name);
+  if (branded) return branded.svg;
+  return getTypeIcon(getFileExt(path || name)).svg;
+}
+
+// ============================================================
+// C# 消息接收处理
+// ============================================================
+if (IS_EMBEDDED) {
+  window.chrome.webview.addEventListener('message', event => {
+    try {
+      const data = JSON.parse(event.data);
+      switch (data.type) {
+        case 'configLoaded':
+          startupItems = data.items.map(i => ({
+            filePath: i.filePath || '',
+            delay: i.delay || 0,
+            comment: i.comment || '',
+            arguments: i.arguments || '',
+            enabled: i.enabled !== false,
+            displayName: i.displayName || ''
+          }));
+          currentMode = data.mode || 'gui';
+          isInStartup = data.isInStartup || false;
+          setModeUI(currentMode);
+          renderStartupList();
+          updateStartupBtn();
+          break;
+
+        case 'itemAdded':
+          startupItems.push({
+            filePath: data.item.filePath,
+            delay: data.item.delay,
+            comment: data.item.comment,
+            arguments: data.item.arguments,
+            enabled: data.item.enabled,
+            displayName: data.item.displayName || ''
+          });
+          renderStartupList();
+          showToast(data.message || '已添加', 'success');
+          break;
+
+        case 'systemScanResult':
+          systemItems = data.entries.map(e => ({
+            name: e.name,
+            path: e.filePath,
+            source: e.source,
+            sourceDetail: e.sourceDisplay,
+            args: e.arguments,
+            isManaged: e.isManaged,
+            isSelf: e.isSelf,
+            disabled: e.disabled || false
+          }));
+          const scanTimeEl = document.getElementById('scanTimeDisplay');
+          if (data.scanTime) {
+            scanTimeEl.textContent = '上次扫描: ' + data.scanTime;
+            scanTimeEl.style.display = 'block';
+          } else {
+            scanTimeEl.style.display = 'none';
+          }
+          resetScanBtn();
+          renderSystemItems();
+          if (data.showToast) {
+            showToast(`扫描完成，发现 ${systemItems.length} 个系统启动项`, 'success');
+          }
+          break;
+
+        case 'scanReset':
+          resetScanBtn();
+          break;
+
+        case 'scanStarted':
+          // Scan has started on C# side, keep button in scanning state
+          break;
+
+        case 'optimizationResult':
+          renderOptimizeFromCSharp(data);
+          break;
+
+        case 'toast':
+          showToast(data.message || '操作成功', data.toastType || 'success');
+          break;
+
+        case 'themeChanged':
+          if (data.isDark) {
+            document.body.classList.add('dark');
+            themeIcon.innerHTML = moonIcon;
+            themeLabel.textContent = '浅色';
+          } else {
+            document.body.classList.remove('dark');
+            themeIcon.innerHTML = sunIcon;
+            themeLabel.textContent = '深色';
+          }
+          break;
+
+        case 'modeChanged':
+          setModeUI(data.mode);
+          break;
+
+        case 'startupToggled':
+          isInStartup = data.isInStartup;
+          updateStartupBtn();
+          showToast(data.message, 'success');
+          break;
+
+        case 'fileDragEnter':
+          document.body.classList.add('drag-file-active');
+          break;
+
+        case 'fileDragLeave':
+          document.body.classList.remove('drag-file-active');
+          break;
+      }
+    } catch (ex) {
+      console.error('Message parse error:', ex);
+    }
+  });
+}
+
+// ============================================================
+// 窗口控制 — 通过 C# 桥接
+// ============================================================
+document.getElementById('btnMin').addEventListener('click', () => {
+  sendToCSharp('minimize');
+});
+document.getElementById('btnClose').addEventListener('click', () => {
+  sendToCSharp('close');
+});
+
+// 标题栏拖动
+document.getElementById('titlebar').addEventListener('mousedown', (e) => {
+  if (e.target.closest('.theme-toggle') || e.target.closest('.win-btn')) return;
+  sendToCSharp('dragWindow');
+});
+
+
+
+// 双击标题栏最大化/还原
+document.getElementById('titlebar').addEventListener('dblclick', (e) => {
+  if (e.target.closest('.theme-toggle') || e.target.closest('.win-btn')) return;
+  // Not implemented — window is fixed size
+});
+
+// ============================================================
+// 主题切换
+// ============================================================
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const themeLabel = document.getElementById('themeLabel');
+const sunIcon = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+themeToggle.addEventListener('click', () => {
+  if (IS_EMBEDDED) {
+    sendToCSharp('toggleTheme');
+  } else {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+    themeLabel.textContent = isDark ? '浅色' : '深色';
+  }
+});
+
+// ============================================================
+// 标签页切换
+// ============================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('pane-' + target).classList.add('active');
+    if (target === 'optimize') {
+      if (IS_EMBEDDED) sendToCSharp('getOptimization');
+      else renderOptimize();
+    } else if (target === 'my-items') {
+      if (IS_EMBEDDED) sendToCSharp('loadConfig');
+    } else if (target === 'system-items') {
+      // 不自动扫描，改为手动点击扫描按钮触发
+    }
+  });
+});
+
+// ============================================================
+// 滑块绑定 — 1:1 还原 ui-redesign-v2.html
+// ============================================================
+let allowDrag = true;
+
+// 生成延迟滑块刻度：保证 0..max 为整数刻度，max 为 20 的倍数
+function computeSliderRange(value) {
+  value = parseInt(value) || 0;
+  if (value < 0) value = 0;
+  // max 始终是 40 的整数倍且 >=40，步长 = max/4 恒为 10 的整数倍：
+  // 0~40 -> 步长 10 (0,10,20,30,40)；41~80 -> 步长 20 (0,20,40,60,80)；以此类推
+  const max = 40 * Math.max(1, Math.ceil(value / 40));
+  const step = max / 4;
+  let ticks = '';
+  for (let i = 0; i <= 4; i++) {
+    ticks += `<span>${i * step}s</span>`;
+  }
+  return { max, ticks, step };
+}
+
+function bindSlider(slider, item) {
+  const delayControl = slider.closest('.delay-control');
+  const valueEl = delayControl.querySelector('.delay-value');
+  const sliderTicks = delayControl.querySelector('.slider-ticks');
+
+  const updateSliderFill = () => {
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--border-strong) ${pct}%, var(--border-strong) 100%)`;
+  };
+
+  const updateValueText = () => {
+    // 编辑态下的输入框正挂在 valueEl 内，禁止改写以免把正在交互的输入控件从 DOM 剥离（会抛 NotFoundError）
+    if (valueEl.querySelector('input.delay-input')) return;
+    valueEl.innerHTML = slider.value + '<span class="unit">秒</span>';
+  };
+
+  // 同时刷新“填充条”和“数字显示”。仅在非编辑态调用（此时 valueEl 内没有输入框）。
+  const updateSliderUI = () => {
+    updateSliderFill();
+    updateValueText();
+  };
+
+  // 仅调整范围（max + 刻度 + 填充条），绝不改写 valueEl —— 因为编辑数字时输入框正挂在 valueEl 里，
+  // 一旦改写会把输入框从 DOM 中剥离，导致无法继续输入、数字显示错乱。
+  const updateSliderRange = (value) => {
+    const range = computeSliderRange(value);
+    slider.max = range.max;
+    updateSliderFill();
+    updateTicks(range.ticks);
+  };
+
+  const updateTicks = (ticksHtml) => {
+    if (!sliderTicks) return;
+    sliderTicks.innerHTML = ticksHtml;
+  };
+
+  slider.addEventListener('input', () => {
+    item.delay = parseInt(slider.value);
+    updateSliderUI();
+    updateStatus();
+    updateStatusTag(item.__index, item.delay, item.enabled);
+  });
+
+  slider.addEventListener('change', () => {
+    if (IS_EMBEDDED) {
+      sendToCSharp('updateDelay', { index: item.__index, delay: item.delay });
+    }
+  });
+
+  slider.addEventListener('mousedown', (e) => { allowDrag = false; e.stopPropagation(); });
+  slider.addEventListener('mouseup', (e) => { allowDrag = true; e.stopPropagation(); });
+  slider.addEventListener('mouseleave', (e) => { allowDrag = true; e.stopPropagation(); });
+  slider.addEventListener('touchstart', (e) => { allowDrag = false; e.stopPropagation(); });
+  slider.addEventListener('touchend', (e) => { allowDrag = true; e.stopPropagation(); });
+
+  valueEl.addEventListener('click', () => {
+    if (slider.disabled) return;
+    if (valueEl.querySelector('input.delay-input')) return; // 已在编辑态，避免重复创建输入框
+    const currentValue = slider.value;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'delay-input';
+    input.value = currentValue;
+    input.style.width = `${Math.max(40, currentValue.toString().length * 12 + 16)}px`;
+
+    // 用 committed 标志保证一次编辑只提交一次（Enter 与 blur 不会重复跑）；
+    // 关键：把 DOM 改写延迟到当前 blur/keydown 事件上下文之外（setTimeout 0），
+    // 规避 WebView2/Edge 在输入框自身事件里操作其 DOM 触发的 NotFoundError。
+    let committed = false;
+    const finishEdit = (rawValue, cancel) => {
+      if (committed) return;
+      committed = true;
+      setTimeout(() => {
+        if (input.parentNode) input.remove(); // 先移除输入框，脱离编辑态
+        if (!cancel) {
+          let newValue = parseInt(rawValue) || 0;
+          if (newValue < 0) newValue = 0;
+          // 范围随输入值“双向”同步：往大扩展 / 往小收缩
+          updateSliderRange(newValue);
+          slider.value = newValue;
+          item.delay = newValue;
+          updateSliderUI();
+          updateStatus();
+          if (IS_EMBEDDED) {
+            sendToCSharp('updateDelay', { index: item.__index, delay: newValue });
+          }
+        } else {
+          updateSliderUI(); // 取消：恢复为原值文本
+        }
+      }, 0);
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        finishEdit(input.value, false);
+      } else if (e.key === 'Escape') {
+        finishEdit(input.value, true);
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      finishEdit(input.value, false);
+    });
+
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '');
+      input.style.width = `${Math.max(40, input.value.length * 12 + 16)}px`;
+      // 打字期间不再实时同步 slider/刻度，最终范围统一在 blur/Enter 时同步。
+    });
+
+    valueEl.innerHTML = '';
+    valueEl.appendChild(input);
+    input.focus();
+    input.select();
+  });
+
+  updateSliderUI();
+}
+
+// ============================================================
+// 渲染启动项列表 — 1:1 还原 ui-redesign-v2.html
+// ============================================================
+function renderStartupList() {
+  const list = document.getElementById('startupList');
+  list.innerHTML = '';
+
+  startupItems.forEach((item, idx) => {
+    item.__index = idx;
+    const displayName = item.displayName || getDisplayName(item);
+    const fileName = getFileName(item.filePath);
+    const iconClass = getIconClass(displayName, item.filePath);
+    const iconSvg = getIconSvg(displayName, item.filePath);
+    const isEnabled = item.enabled !== false;
+
+    const div = document.createElement('div');
+    div.className = 'startup-item' + (idx === selectedIndex ? ' selected' : '') + (!isEnabled ? ' disabled' : '');
+    div.dataset.index = idx;
+
+    let statusTag = '';
+    if (!isEnabled) {
+      statusTag = '<span class="status-tag status-disabled">已禁用</span>';
+    } else if (item.delay > 0) {
+      statusTag = '<span class="status-tag status-delayed">延迟启动</span>';
+    } else {
+      statusTag = '<span class="status-tag status-active">立即启动</span>';
+    }
+
+    let argsTag = '';
+    if (item.arguments) {
+      argsTag = `<span class="item-args">${item.arguments}</span>`;
+    }
+
+    let commentHtml = '';
+    if (item.comment) {
+      commentHtml = `<div class="item-comment">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        ${item.comment}
+      </div>`;
+    }
+
+    const range = computeSliderRange(item.delay);
+    const maxSlider = range.max;
+    const ticks = range.ticks;
+
+    div.innerHTML = `
+      <div class="item-icon ${iconClass}">${iconSvg}</div>
+      <div class="item-info">
+        <div class="item-name">
+          ${displayName}
+          ${statusTag}
+          ${argsTag}
+        </div>
+        <div class="item-path">${item.filePath}</div>
+        ${commentHtml}
+      </div>
+      <div class="drag-handle" draggable="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 9h4M10 15h4M4 9h4M4 15h4M16 9h4M16 15h4"/></svg>
+      </div>
+      <div class="delay-control">
+        <span class="delay-label">延迟</span>
+        <div style="flex:1">
+          <div class="slider-wrap">
+            <input type="range" class="slider" min="0" max="${maxSlider}" value="${item.delay}" ${!isEnabled ? 'disabled' : ''}>
+          </div>
+          <div class="slider-ticks">${ticks}</div>
+        </div>
+        <div class="delay-value" ${!isEnabled ? 'style="opacity:.5"' : ''}>${item.delay}<span class="unit">秒</span></div>
+      </div>
+    `;
+
+    list.appendChild(div);
+
+    const slider = div.querySelector('.slider');
+    bindSlider(slider, item);
+
+    // 点击选中
+    div.addEventListener('click', (e) => {
+      if (e.target.classList.contains('slider') || e.target.closest('.slider-wrap') || e.target.closest('.delay-value')) return;
+      selectedIndex = idx;
+      document.querySelectorAll('.startup-item').forEach(i => i.classList.remove('selected'));
+      div.classList.add('selected');
+    });
+
+    // 右键菜单
+    div.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      selectedIndex = idx;
+      contextItem = div;
+      document.querySelectorAll('.startup-item').forEach(i => i.classList.remove('selected'));
+      div.classList.add('selected');
+      // 先显示菜单以获取尺寸
+      contextMenu.style.left = e.clientX + 'px';
+      contextMenu.style.top = e.clientY + 'px';
+      contextMenu.classList.add('show');
+      // 检测是否超出视口，自动调整位置
+      const rect = contextMenu.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (rect.right > vw) contextMenu.style.left = (e.clientX - rect.width) + 'px';
+      if (rect.bottom > vh) contextMenu.style.top = (e.clientY - rect.height) + 'px';
+    });
+
+    // 拖拽排序 — 只在drag-handle上触发
+    // —— 内部拖拽排序：使用 Pointer Events（不依赖 OLE 拖放，不与 WPF 文件拖放冲突）——
+    const dragHandle = div.querySelector('.drag-handle');
+    dragHandle.addEventListener('pointerdown', (e) => {
+      if (!allowDrag || e.button !== 0) return;
+      e.preventDefault();
+      dragSrcEl = div;
+      dragSrcEl.classList.add('dragging');
+      dragSrcEl.setPointerCapture(e.pointerId);
+
+      const onMove = (ev) => {
+        // 找到鼠标下方的目标项
+        const items = [...document.querySelectorAll('.startup-item')];
+        items.forEach(i => i.classList.remove('drag-over'));
+        const target = items.find(item => {
+          if (item === dragSrcEl) return false;
+          const rect = item.getBoundingClientRect();
+          return ev.clientY >= rect.top && ev.clientY <= rect.bottom;
+        });
+        if (target) target.classList.add('drag-over');
+      };
+
+      const onUp = (ev) => {
+        dragSrcEl.classList.remove('dragging');
+        dragSrcEl.releasePointerCapture(e.pointerId);
+        document.querySelectorAll('.startup-item').forEach(i => i.classList.remove('drag-over'));
+
+        // 找到放置目标
+        const items = [...document.querySelectorAll('.startup-item')];
+        const target = items.find(item => {
+          if (item === dragSrcEl) return false;
+          const rect = item.getBoundingClientRect();
+          return ev.clientY >= rect.top && ev.clientY <= rect.bottom;
+        });
+
+        if (target) {
+          const listEl = document.getElementById('startupList');
+          const srcIdx = items.indexOf(dragSrcEl);
+          const tgtIdx = items.indexOf(target);
+          if (srcIdx !== tgtIdx) {
+            if (srcIdx < tgtIdx) {
+              listEl.insertBefore(dragSrcEl, target.nextSibling);
+            } else {
+              listEl.insertBefore(dragSrcEl, target);
+            }
+            const movedItem = startupItems[srcIdx];
+            startupItems.splice(srcIdx, 1);
+            startupItems.splice(tgtIdx, 0, movedItem);
+            selectedIndex = tgtIdx;
+            updateStatus();
+            if (IS_EMBEDDED) {
+              sendToCSharp('moveItem', { fromIndex: srcIdx, toIndex: tgtIdx });
+            }
+          }
+        }
+
+        dragSrcEl = null;
+        div.removeEventListener('pointermove', onMove);
+        div.removeEventListener('pointerup', onUp);
+        div.removeEventListener('pointercancel', onUp);
+      };
+
+      div.addEventListener('pointermove', onMove);
+      div.addEventListener('pointerup', onUp);
+      div.addEventListener('pointercancel', onUp);
+    });
+  });
+
+  updateStatus();
+}
+
+// 注意：外部文件拖放由 WPF 层处理（Win32 WM_DROPFILES 消息）
+// 列表项内部拖拽排序在 renderStartupList 中处理
+
+// ============================================================
+// 列表操作按钮 — 通过 C# 桥接
+// ============================================================
+let selectedIndex = 0;
+let dragSrcEl = null;
+
+function getSelectedItem() {
+  const el = document.querySelector('.startup-item.selected');
+  if (!el) return null;
+  return { el, index: parseInt(el.dataset.index) };
+}
+
+document.getElementById('moveUpBtn').addEventListener('click', () => {
+  const sel = getSelectedItem();
+  if (!sel || sel.index <= 0) return;
+  selectedIndex = sel.index - 1;
+  const item = startupItems[sel.index];
+  startupItems.splice(sel.index, 1);
+  startupItems.splice(sel.index - 1, 0, item);
+  renderStartupList();
+  if (IS_EMBEDDED) {
+    sendToCSharp('moveItem', { fromIndex: sel.index, toIndex: sel.index - 1 });
+  }
+});
+
+document.getElementById('moveDownBtn').addEventListener('click', () => {
+  const sel = getSelectedItem();
+  if (!sel || sel.index >= startupItems.length - 1) return;
+  selectedIndex = sel.index + 1;
+  const item = startupItems[sel.index];
+  startupItems.splice(sel.index, 1);
+  startupItems.splice(sel.index + 1, 0, item);
+  renderStartupList();
+  if (IS_EMBEDDED) {
+    sendToCSharp('moveItem', { fromIndex: sel.index, toIndex: sel.index + 1 });
+  }
+});
+
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  const sel = getSelectedItem();
+  if (!sel) return;
+  const name = startupItems[sel.index].displayName || getDisplayName(startupItems[sel.index]);
+  const confirmed = await showModal('确认删除', `确定要删除"${name}"吗？`, { type: 'confirm' });
+  if (confirmed) {
+    if (IS_EMBEDDED) {
+      sendToCSharp('deleteItem', { index: sel.index });
+    } else {
+      startupItems.splice(sel.index, 1);
+      selectedIndex = Math.max(0, Math.min(selectedIndex, startupItems.length - 1));
+      renderStartupList();
+      showToast('已删除', 'success');
+    }
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', async () => {
+  const confirmed = await showModal('确认清空', '确定要清空所有启动项吗？此操作不可撤销。', { type: 'confirm' });
+  if (confirmed) {
+    if (IS_EMBEDDED) {
+      sendToCSharp('clearItems');
+    } else {
+      startupItems = [];
+      selectedIndex = 0;
+      renderStartupList();
+      showToast('已清空所有启动项', 'success');
+    }
+  }
+});
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  if (IS_EMBEDDED) {
+    sendToCSharp('addFile');
+  } else {
+    showToast('请将文件拖入窗口，或使用右键菜单添加', 'success');
+  }
+});
+
+// ============================================================
+// 外部文件拖放 — 由 WPF 层处理（获取完整路径，不读取文件内容）
+// 内部列表项拖拽排序使用 Pointer Events，不依赖 OLE
+// ============================================================
+
+const startupList = document.getElementById('startupList');
+
+// 接收 WPF 层拖放事件通知（显示/隐藏蓝色提示框）
+// fileDragEnter → WPF 检测到外部文件拖入窗口
+// fileDragLeave → 拖出窗口或完成放置
+
+// ============================================================
+// 右键菜单 — 通过 C# 桥接处理真实操作
+// ============================================================
+const contextMenu = document.getElementById('contextMenu');
+let contextItem = null;
+
+document.addEventListener('click', () => {
+  contextMenu.classList.remove('show');
+  document.getElementById('moreMenu').classList.remove('show');
+});
+
+contextMenu.querySelectorAll('.context-menu-item').forEach(menuItem => {
+  menuItem.addEventListener('click', async () => {
+    if (!contextItem) return;
+    const action = menuItem.dataset.action;
+    const idx = parseInt(contextItem.dataset.index);
+    const item = startupItems[idx];
+    const name = item.displayName || getDisplayName(item);
+
+    switch (action) {
+      case 'launch':
+        if (IS_EMBEDDED) {
+          sendToCSharp('launchItem', { index: idx });
+        } else {
+          showToast('（演示模式）无法直接启动真实程序', 'info');
+        }
+        break;
+      case 'edit-path':
+        if (IS_EMBEDDED) {
+          const newPath = await showModal('编辑文件路径', '', { type: 'prompt', defaultValue: item.filePath });
+          if (newPath) {
+            sendToCSharp('editPath', { index: idx, path: newPath });
+          }
+        } else {
+          const newPath2 = await showModal('编辑文件路径', '', { type: 'prompt', defaultValue: item.filePath });
+          if (newPath2) { item.filePath = newPath2; renderStartupList(); showToast('路径已更新', 'success'); }
+        }
+        break;
+      case 'edit-args':
+        const newArgs = await showModal('编辑启动参数', '仅 EXE 文件有效', { type: 'prompt', defaultValue: item.arguments });
+        if (newArgs !== null) { 
+          item.arguments = newArgs; 
+          renderStartupList(); 
+          if (IS_EMBEDDED) sendToCSharp('editArgs', { index: idx, args: newArgs });
+          showToast('参数已更新', 'success'); 
+        }
+        break;
+      case 'edit-comment':
+        const newComment = await showModal('编辑备注', '', { type: 'prompt', defaultValue: item.comment });
+        if (newComment !== null) { 
+          item.comment = newComment; 
+          renderStartupList(); 
+          if (IS_EMBEDDED) sendToCSharp('editComment', { index: idx, comment: newComment });
+          showToast('备注已更新', 'success'); 
+        }
+        break;
+      case 'open-dir':
+        if (IS_EMBEDDED) {
+          sendToCSharp('openDir', { path: item.filePath });
+        } else {
+          await showModal('打开目录', '打开文件所在目录：\n' + item.filePath.substring(0, item.filePath.lastIndexOf('\\')));
+        }
+        break;
+      case 'create-shortcut':
+        if (IS_EMBEDDED) {
+          sendToCSharp('createItemShortcut', { path: item.filePath, name: name });
+        } else {
+          await showModal('创建快捷方式', `已为 ${name} 创建桌面快捷方式`);
+        }
+        break;
+      case 'toggle':
+        item.enabled = item.enabled === false ? true : false;
+        if (IS_EMBEDDED) {
+          sendToCSharp('toggleItemEnabled', { index: idx, enabled: item.enabled });
+        }
+        renderStartupList();
+        showToast(item.enabled ? '已启用' : '已禁用', 'success');
+        break;
+      case 'delete':
+        if (IS_EMBEDDED) {
+          sendToCSharp('deleteItem', { index: idx });
+        } else {
+          startupItems.splice(idx, 1);
+          selectedIndex = Math.max(0, Math.min(selectedIndex, startupItems.length - 1));
+          renderStartupList();
+          showToast('已删除', 'success');
+        }
+        break;
+    }
+    contextMenu.classList.remove('show');
+  });
+});
+
+// ============================================================
+// 更多菜单 — 通过 C# 桥接
+// ============================================================
+document.getElementById('moreBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('moreMenu').classList.toggle('show');
+});
+
+document.querySelectorAll('.more-menu-item').forEach(menuItem => {
+  menuItem.addEventListener('click', async () => {
+    const action = menuItem.dataset.action;
+    switch (action) {
+      case 'remove-startup':
+        if (IS_EMBEDDED) sendToCSharp('removeStartup');
+        else { isInStartup = false; updateStartupBtn(); showToast('已移除开机启动', 'success'); }
+        break;
+      case 'open-startup-dir':
+        if (IS_EMBEDDED) sendToCSharp('openStartupDir');
+        else await showModal('打开启动文件夹', '正在打开启动文件夹...');
+        break;
+      case 'create-shortcut':
+        if (IS_EMBEDDED) {
+          sendToCSharp('createShortcut');
+        } else {
+          await showModal('创建快捷方式', '已创建桌面快捷方式');
+        }
+        break;
+      case 'about':
+        await showModal('关于', 'Delayed Startup Tool Pro V2.0.2\n\n延迟启动工具 — 管理开机自启动程序并设置自定义延迟时间\n\n支持 GUI/BAT/后台隐藏 三种模式\n拖拽排序 · 智能优化 · 系统启动项扫描\n\n制作者：ShuiYuXiang');
+        break;
+    }
+    document.getElementById('moreMenu').classList.remove('show');
+  });
+});
+
+// ============================================================
+// 保存配置 / 测试启动 — 通过 C# 桥接
+// ============================================================
+document.getElementById('saveConfigBtn').addEventListener('click', () => {
+  if (IS_EMBEDDED) {
+    sendToCSharp('saveConfig', {
+      items: startupItems.map(i => ({
+        filePath: i.filePath,
+        delay: i.delay,
+        comment: i.comment,
+        arguments: i.arguments,
+        enabled: i.enabled
+      })),
+      mode: currentMode
+    });
+  } else {
+    const config = startupItems.map(item => ({
+      Item1: item.filePath,
+      Item2: item.delay,
+      Item3: item.comment,
+      Item4: item.arguments
+    }));
+    console.log('config.json:', JSON.stringify(config, null, 2));
+    showToast('配置已保存', 'success');
+  }
+});
+
+document.getElementById('testBtn').addEventListener('click', () => {
+  const sel = getSelectedItem();
+  if (!sel) { showToast('请先选中一个启动项', 'error'); return; }
+  if (IS_EMBEDDED) {
+    sendToCSharp('testLaunch', { index: sel.index });
+  } else {
+    showToast('测试启动已开始，5 秒后执行...', 'success');
+  }
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+  if (IS_EMBEDDED) {
+    sendToCSharp('stopLaunch');
+  } else {
+    showToast('已停止启动', 'error');
+  }
+});
+
+document.getElementById('addToStartupBtn').addEventListener('click', () => {
+  if (startupItems.length === 0) {
+    showToast('请先添加启动项，再设置开机启动', 'error');
+    return;
+  }
+  if (IS_EMBEDDED) {
+    sendToCSharp('toggleStartup');
+  } else {
+    isInStartup = !isInStartup;
+    updateStartupBtn();
+    showToast(isInStartup ? '已添加到开机启动' : '已从开机启动移除', 'success');
+  }
+});
+
+document.getElementById('helpBtn').addEventListener('click', async () => {
+  await showModal('使用说明', '【添加启动项】\n• 点击"添加"按钮选择程序\n• 或从资源管理器拖放文件到列表\n\n【设置延迟】\n• 拖动滑块或点击数字直接输入\n\n【调整顺序】\n• 使用上移/下移按钮\n• 或直接拖拽列表项排序\n\n【右键菜单】\n• 编辑路径、参数、备注\n• 启用/禁用、删除\n\n【系统启动项】\n• 切换到"系统启动项"标签页\n• 点击扫描按钮读取所有系统自启动程序\n\n【一键优化】\n• 切换到"一键优化"标签页\n• 点击"一键优化"自动分配最佳延迟时间');
+});
+
+// ============================================================
+// 模式切换 — 通过 C# 桥接
+// ============================================================
+function setModeUI(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-option').forEach(o => {
+    o.classList.toggle('active', o.dataset.mode === mode);
+  });
+}
+
+document.querySelectorAll('.mode-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    if (startupItems.length === 0) {
+      showToast('请先添加启动项，再切换启动模式', 'error');
+      return;
+    }
+    const mode = opt.dataset.mode;
+    if (IS_EMBEDDED) {
+      sendToCSharp('setMode', { mode });
+    } else {
+      setModeUI(mode);
+      const modeNames = { gui: '图形界面', bat: '命令行', hidden: '后台隐藏' };
+      showToast(`已切换到${modeNames[mode]}模式`, 'success');
+    }
+  });
+});
+
+// ============================================================
+// 开机启动按钮状态更新
+// ============================================================
+function updateStartupBtn() {
+  const btn = document.getElementById('addToStartupBtn');
+  if (isInStartup) {
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> 移除开机启动`;
+  } else {
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> 添加到开机启动`;
+  }
+}
+
+// ============================================================
+// 状态栏更新
+// ============================================================
+function updateStatus() {
+  const count = startupItems.length;
+  const enabledCount = startupItems.filter(i => i.enabled !== false).length;
+  const totalDelay = startupItems.filter(i => i.enabled !== false).reduce((sum, i) => sum + i.delay, 0);
+  document.getElementById('myItemsCount').textContent = count + ' 项';
+  document.getElementById('myItemsBadge').textContent = count;
+  document.getElementById('statusConfig').textContent = `已配置 ${enabledCount} 项 / 共 ${count} 项`;
+  document.getElementById('statusTime').textContent = `总延迟 ${totalDelay} 秒`;
+}
+
+function updateStatusTag(index, delay, enabled) {
+  const items = document.querySelectorAll('.startup-item');
+  if (items[index]) {
+    const statusTag = items[index].querySelector('.status-tag');
+    if (statusTag) {
+      let newTag = '';
+      if (!enabled) {
+        newTag = '<span class="status-tag status-disabled">已禁用</span>';
+      } else if (delay > 0) {
+        newTag = '<span class="status-tag status-delayed">延迟启动</span>';
+      } else {
+        newTag = '<span class="status-tag status-active">立即启动</span>';
+      }
+      statusTag.outerHTML = newTag;
+    }
+  }
+}
+
+// ============================================================
+// 系统启动项扫描 — 通过 C# 桥接
+// ============================================================
+document.getElementById('scanBtn').addEventListener('click', () => {
+  if (IS_EMBEDDED) {
+    const btn = document.getElementById('scanBtn');
+    btn.classList.add('scanning');
+    btn.querySelector('span').textContent = '正在扫描...';
+    btn.querySelector('svg').classList.add('spin');
+    sendToCSharp('scanSystem');
+  } else {
+    const btn = document.getElementById('scanBtn');
+    btn.classList.add('scanning');
+    btn.querySelector('span').textContent = '正在扫描...';
+    btn.querySelector('svg').classList.add('spin');
+    setTimeout(() => {
+      systemItems = generateMockSystemItems();
+      btn.classList.remove('scanning');
+      btn.querySelector('span').textContent = '重新扫描';
+      btn.querySelector('svg').classList.remove('spin');
+      renderSystemItems();
+      showToast(`扫描完成，发现 ${systemItems.length} 个系统启动项`, 'success');
+    }, 1200);
+  }
+});
+
+// 扫描完成后重置按钮（由 C# 回调触发）
+function resetScanBtn() {
+  const btn = document.getElementById('scanBtn');
+  btn.classList.remove('scanning');
+  btn.querySelector('span').textContent = '重新扫描';
+  btn.querySelector('svg').classList.remove('spin');
+}
+
+// 模拟数据（非嵌入模式备用）
+function generateMockSystemItems() {
+  return [
+    { name: 'WeChat', path: 'C:\\Program Files\\Tencent\\WeChat\\WeChat.exe', source: 'registry', sourceDetail: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', args: '', isManaged: false },
+    { name: '360Safe', path: 'C:\\Program Files\\360\\360Safe\\360Safe.exe', source: 'registry', sourceDetail: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', args: '/min', isManaged: false },
+    { name: 'OneDrive', path: 'C:\\Users\\SOLDIER\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe', source: 'registry', sourceDetail: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', args: '/background', isManaged: false },
+    { name: 'DelayedStartup', path: 'C:\\Users\\SOLDIER\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\DelayedStartup.lnk', source: 'folder', sourceDetail: '用户启动文件夹', args: '', isManaged: true },
+    { name: 'AutoHotkey', path: 'C:\\Users\\SOLDIER\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\startup.ahk', source: 'folder', sourceDetail: '用户启动文件夹', args: '', isManaged: false },
+    { name: 'NVIDIA Share', path: 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\NVIDIA Share.lnk', source: 'folder', sourceDetail: '公共启动文件夹', args: '', isManaged: false },
+    { name: 'GoogleUpdate', path: 'C:\\Program Files\\Google\\Update\\GoogleUpdate.exe', source: 'task', sourceDetail: '计划任务: GoogleUpdateTaskMachine', args: '/c', isManaged: false },
+    { name: 'Microsoft Edge Update', path: 'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe', source: 'task', sourceDetail: '计划任务: EdgeUpdateTaskMachine', args: '--background', isManaged: false },
+  ];
+}
+
+function renderSystemItems() {
+  const container = document.getElementById('systemItemsList');
+  const regItems = systemItems.filter(i => i.source === 'registry');
+  const folderItems = systemItems.filter(i => i.source === 'folder');
+  const taskItems = systemItems.filter(i => i.source === 'task');
+
+  document.getElementById('sysItemsCount').textContent = systemItems.length + ' 项';
+  document.getElementById('sysItemsBadge').textContent = systemItems.length;
+  document.getElementById('scanStats').style.display = 'flex';
+  document.getElementById('regCount').textContent = regItems.length;
+  document.getElementById('folderCount').textContent = folderItems.length;
+  document.getElementById('taskCount').textContent = taskItems.length;
+
+  let html = '';
+  if (regItems.length > 0) {
+    html += `<div class="source-group-header"><span class="source-tag source-registry">注册表</span> ${regItems.length} 项</div>`;
+    regItems.forEach(item => { html += renderSystemItem(item); });
+  }
+  if (folderItems.length > 0) {
+    html += `<div class="source-group-header"><span class="source-tag source-folder">启动文件夹</span> ${folderItems.length} 项</div>`;
+    folderItems.forEach(item => { html += renderSystemItem(item); });
+  }
+  if (taskItems.length > 0) {
+    html += `<div class="source-group-header"><span class="source-tag source-task">计划任务</span> ${taskItems.length} 项</div>`;
+    taskItems.forEach(item => { html += renderSystemItem(item); });
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.btn-import').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.name;
+      const sysItem = systemItems.find(i => i.name === name);
+      if (!sysItem) return;
+      if (sysItem.isSelf) {
+        showToast('自身启动项不能导入', 'error');
+        return;
+      }
+      if (IS_EMBEDDED) {
+        sendToCSharp('importEntry', { name });
+      } else {
+        const exists = startupItems.some(i => i.filePath.toLowerCase() === sysItem.path.toLowerCase());
+        if (exists) { showToast('该启动项已在列表中', 'error'); return; }
+        startupItems.push({ filePath: sysItem.path, delay: 0, comment: sysItem.name, arguments: sysItem.args || '', enabled: true });
+        sysItem.isManaged = true;
+        sysItem.disabled = true;
+        renderStartupList();
+        renderSystemItems();
+        showToast(`已导入 ${sysItem.name}`, 'success');
+      }
+    });
+  });
+
+  container.querySelectorAll('.btn-restore').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = btn.dataset.name;
+      const sysItem = systemItems.find(i => i.name === name);
+      if (!sysItem) return;
+      const confirmed = await showModal(
+        '确认恢复',
+        `恢复后"${name}"将从延迟启动列表中移除，并恢复系统原始启动方式。确定继续？`,
+        { type: 'confirm' }
+      );
+      if (confirmed) {
+        if (IS_EMBEDDED) {
+          sendToCSharp('restoreSystemItem', { name });
+        } else {
+          const idx = startupItems.findIndex(i =>
+            i.filePath.toLowerCase() === sysItem.path.toLowerCase());
+          if (idx >= 0) {
+            startupItems.splice(idx, 1);
+            renderStartupList();
+          }
+          sysItem.disabled = false;
+          sysItem.isManaged = false;
+          renderSystemItems();
+          showToast(`已恢复 ${name}`, 'success');
+        }
+      }
+    });
+  });
+}
+
+function renderSystemItem(item) {
+  const iconClass = getIconClass(item.name, item.path);
+  const iconSvg = getIconSvg(item.name, item.path);
+  const sourceClass = 'source-' + item.source;
+
+  let managedTag = '';
+  if (item.isSelf) {
+    managedTag = '<span class="status-tag status-disabled" style="font-size:9px">自身程序</span>';
+  } else if (item.disabled) {
+    managedTag = '<span class="status-tag status-delayed" style="font-size:9px">已禁用</span>';
+  } else if (item.isManaged) {
+    managedTag = '<span class="status-tag status-active" style="font-size:9px">已管理</span>';
+  }
+
+  let actionBtn = '';
+  if (item.isSelf) {
+    actionBtn = '<button class="btn btn-import" disabled style="opacity:.5;pointer-events:none">不可导入</button>';
+  } else if (item.disabled) {
+    actionBtn = `<button class="btn btn-restore" data-name="${item.name}">恢复</button>`;
+  } else if (item.isManaged) {
+    actionBtn = '<button class="btn btn-import" disabled style="opacity:.5;pointer-events:none">已导入</button>';
+  } else {
+    actionBtn = `<button class="btn btn-import" data-name="${item.name}">导入</button>`;
+  }
+
+  const itemClass = item.disabled ? 'startup-item disabled' : 'startup-item';
+
+  return `
+    <div class="${itemClass}">
+      <div class="item-icon ${iconClass}">${iconSvg}</div>
+      <div class="item-info">
+        <div class="item-name">
+          ${item.name}
+          <span class="source-tag ${sourceClass}">${item.sourceDetail}</span>
+          ${managedTag}
+          ${item.args ? `<span class="item-args">${item.args}</span>` : ''}
+        </div>
+        <div class="item-path">${item.path}</div>
+      </div>
+      ${actionBtn}
+    </div>
+  `;
+}
+
+// ============================================================
+// 一键优化 — 通过 C# 桥接
+// ============================================================
+function renderOptimizeFromCSharp(data) {
+  const { score, oldTotal, newTotal, saved, suggestions } = data;
+
+  document.getElementById('metricBefore').textContent = oldTotal + 's';
+  document.getElementById('metricAfter').textContent = newTotal + 's';
+  document.getElementById('metricSaved').textContent = (saved >= 0 ? '+' : '') + saved + 's';
+  document.getElementById('optimizeScore').textContent = score;
+
+  const circumference = 314;
+  const offset = circumference - (score / 100) * circumference;
+  document.getElementById('optimizeRing').style.strokeDashoffset = offset;
+
+  const container = document.getElementById('optimizeSuggestions');
+  container.innerHTML = '';
+
+  if (!suggestions || suggestions.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">暂无启动项，请先添加启动项</div>';
+    return;
+  }
+
+  const catMap = {
+    system:  { label: '系统关键', color: 'cat-system' },
+    network: { label: '网络工具', color: 'cat-network' },
+    comm:    { label: '通讯社交', color: 'cat-comm' },
+    office:  { label: '办公软件', color: 'cat-office' },
+    tool:    { label: '实用工具', color: 'cat-tool' },
+    heavy:   { label: '大型软件', color: 'cat-heavy' },
+  };
+
+  const grouped = {};
+  suggestions.forEach(s => {
+    if (!grouped[s.category]) grouped[s.category] = [];
+    grouped[s.category].push(s);
+  });
+
+  Object.keys(grouped).forEach(catKey => {
+    const group = grouped[catKey];
+    const cat = catMap[catKey] || { label: '其他', color: 'cat-tool' };
+    const suggestedDelay = group[0]?.newDelay ?? 10;
+
+    const groupHeader = document.createElement('div');
+    groupHeader.className = 'source-group-header';
+    groupHeader.innerHTML = `<span class="suggestion-category ${cat.color}">${cat.label}</span> 建议延迟 ${suggestedDelay}s · ${group.length} 项`;
+    container.appendChild(groupHeader);
+
+    group.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'optimize-suggestion';
+      const name = s.item?.displayName || '未知';
+
+      let changeHtml = '';
+      if (s.changed) {
+        changeHtml = `<div class="suggestion-change">
+          <span class="old">${s.oldDelay}s</span>
+          <span class="arrow">→</span>
+          <span class="new">${s.newDelay}s</span>
+        </div>`;
+      } else {
+        changeHtml = `<div class="suggestion-change">
+          <span class="new">${s.newDelay}s</span>
+          <span style="color:var(--text-muted);font-size:10px">(无需调整)</span>
+        </div>`;
+      }
+
+      div.innerHTML = `
+        <div class="item-icon ${getIconClass(name, s.item?.filePath)}" style="width:26px;height:26px;font-size:14px">${getIconSvg(name, s.item?.filePath)}</div>
+        <div class="item-info">
+          <div class="item-name" style="font-size:12px">${name}</div>
+        </div>
+        ${changeHtml}
+        <div class="suggestion-reason">${s.reason || ''}</div>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+
+// 本地优化计算（非嵌入模式备用）
+function renderOptimize() {
+  if (startupItems.length === 0) {
+    document.getElementById('optimizeSuggestions').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">暂无启动项，请先添加启动项</div>';
+    return;
+  }
+
+  const suggestions = startupItems.map(item => {
+    const name = item.displayName || getDisplayName(item);
+    const cat = categorizeItem(name);
+    const oldDelay = item.delay;
+    const newDelay = cat.suggestedDelay;
+    return { item, name, cat, oldDelay, newDelay, changed: oldDelay !== newDelay, category: cat.cat, reason: cat.label };
+  });
+
+  const totalBefore = suggestions.reduce((sum, s) => sum + s.oldDelay, 0);
+  const totalAfter = suggestions.reduce((sum, s) => sum + s.newDelay, 0);
+  const saved = totalBefore - totalAfter;
+  const score = Math.min(100, Math.max(0, 100 - Math.abs(saved) * 2));
+
+  renderOptimizeFromCSharp({
+    score,
+    oldTotal: totalBefore,
+    newTotal: totalAfter,
+    saved,
+    suggestions: suggestions.map(s => ({
+      item: { displayName: s.name },
+      category: s.category,
+      oldDelay: s.oldDelay,
+      newDelay: s.newDelay,
+      reason: s.reason,
+      changed: s.changed
+    }))
+  });
+}
+
+// 应用优化
+document.getElementById('applyOptimizeBtn').addEventListener('click', async () => {
+  if (startupItems.length === 0) {
+    showToast('请先添加启动项，再进行优化', 'error');
+    return;
+  }
+  const confirmed = await showModal('确认优化', '将根据程序类型自动调整所有启动项的延迟时间，确定继续？', { type: 'confirm' });
+  if (!confirmed) return;
+
+  if (IS_EMBEDDED) {
+    sendToCSharp('applyOptimization');
+  } else {
+    optimizationBackup = {};
+    startupItems.forEach(item => { optimizationBackup[(item.filePath || '').toLowerCase()] = item.delay; });
+    startupItems.forEach(item => {
+      const name = item.displayName || getDisplayName(item);
+      const cat = categorizeItem(name);
+      item.delay = cat.suggestedDelay;
+    });
+    renderStartupList();
+    renderOptimize();
+  }
+
+  const btn = document.getElementById('applyOptimizeBtn');
+  btn.classList.add('applied');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>已应用优化';
+  if (!IS_EMBEDDED) showToast('优化已应用！所有延迟时间已智能调整', 'success');
+
+  setTimeout(() => {
+    btn.classList.remove('applied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>一键优化';
+  }, 3000);
+});
+
+// 恢复默认
+document.getElementById('resetOptimizeBtn').addEventListener('click', async () => {
+  const confirmed = await showModal('恢复默认', '将把所有启动项恢复到「一键优化前」的延迟时间，确定继续？', { type: 'confirm' });
+  if (!confirmed) return;
+  if (IS_EMBEDDED) {
+    // C# 负责从备份恢复，并回发 configLoaded / optimizationResult / 提示
+    sendToCSharp('resetOptimization');
+  } else {
+    if (optimizationBackup) {
+      startupItems.forEach(item => {
+        const key = (item.filePath || '').toLowerCase();
+        if (optimizationBackup[key] !== undefined) item.delay = optimizationBackup[key];
+      });
+    } else {
+      startupItems.forEach(item => { item.delay = 0; });
+    }
+    renderStartupList();
+    renderOptimize();
+    showToast('已恢复默认设置', 'success');
+  }
+});
+
+// ============================================================
+// 弹窗组件 — 1:1 还原 ui-redesign-v2.html
+// ============================================================
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalMessage = document.getElementById('modalMessage');
+const modalInput = document.getElementById('modalInput');
+const modalOk = document.getElementById('modalOk');
+const modalCancel = document.getElementById('modalCancel');
+const modalClose = document.getElementById('modalClose');
+
+function showModal(title, message, options = {}) {
+  return new Promise((resolve) => {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message || '';
+    modalMessage.style.display = message ? 'block' : 'none';
+
+    if (options.type === 'prompt') {
+      modalInput.style.display = 'block';
+      modalInput.value = options.defaultValue || '';
+      setTimeout(() => modalInput.focus(), 100);
+    } else {
+      modalInput.style.display = 'none';
+    }
+
+    if (options.type === 'confirm') {
+      modalOk.textContent = '确定';
+      modalCancel.style.display = 'inline-flex';
+    } else if (options.type === 'prompt') {
+      modalOk.textContent = '保存';
+      modalCancel.style.display = 'inline-flex';
+    } else {
+      modalOk.textContent = '确定';
+      modalCancel.style.display = 'none';
+    }
+
+    modalOverlay.classList.add('show');
+
+    const cleanup = () => {
+      modalOverlay.classList.remove('show');
+      modalOk.onclick = null;
+      modalCancel.onclick = null;
+      modalClose.onclick = null;
+      modalInput.onkeydown = null;
+    };
+
+    modalOk.onclick = () => {
+      cleanup();
+      if (options.type === 'prompt') { resolve(modalInput.value); }
+      else { resolve(true); }
+    };
+
+    modalCancel.onclick = () => { cleanup(); resolve(options.type === 'prompt' ? null : false); };
+    modalClose.onclick = () => { cleanup(); resolve(options.type === 'prompt' ? null : false); };
+
+    modalInput.onkeydown = (e) => {
+      if (e.key === 'Enter') { cleanup(); resolve(options.type === 'prompt' ? modalInput.value : true); }
+      else if (e.key === 'Escape') { cleanup(); resolve(options.type === 'prompt' ? null : false); }
+    };
+  });
+}
+
+// ============================================================
+// Toast — 1:1 还原 ui-redesign-v2.html
+// ============================================================
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+let toastTimer = null;
+
+function showToast(text, type = 'success') {
+  clearTimeout(toastTimer);
+  toastText.textContent = text;
+  toast.className = 'toast show ' + type;
+  toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 2500);
+}
+
+// ============================================================
+// 初始化 — 从 C# 加载真实数据
+// ============================================================
+if (IS_EMBEDDED) {
+  sendToCSharp('loadConfig');
+  // 启动诊断 toast — 3秒后显示，确认桥接正常
+  setTimeout(() => {
+    showToast('软件已就绪', 'success');
+  }, 3000);
+} else {
+  // 纯 HTML 模式：使用模拟数据
+  startupItems = [
+    { filePath: "C:\\ICO\\2345看图王.lnk", delay: 3, comment: "", arguments: "", enabled: true, displayName: "2345看图王" },
+    { filePath: "C:\\ICO\\Everything.lnk", delay: 10, comment: "", arguments: "", enabled: true, displayName: "Everything" },
+    { filePath: "C:\\ICO\\360DNS.lnk", delay: 10, comment: "", arguments: "", enabled: true, displayName: "360DNS" },
+    { filePath: "C:\\Program Files\\Autodesk\\AutoCAD 2021\\acad.exe", delay: 18, comment: "", arguments: "", enabled: true, displayName: "AutoCAD 2021" },
+    { filePath: "C:\\ICO\\Microsoft Edge.lnk", delay: 6, comment: "", arguments: "", enabled: true, displayName: "Microsoft Edge" },
+    { filePath: "C:\\ICO\\Chrome.lnk", delay: 0, comment: "", arguments: "", enabled: true, displayName: "Chrome" },
+    { filePath: "C:\\ICO\\360安全浏览器.lnk", delay: 5, comment: "360安全浏览器", arguments: "", enabled: true, displayName: "360安全浏览器" },
+    { filePath: "C:\\ICO\\CorelDRAW 2024.lnk", delay: 0, comment: "", arguments: "", enabled: true, displayName: "CorelDRAW 2024" },
+    { filePath: "C:\\ICO\\Excel 2016.lnk", delay: 3, comment: "", arguments: "", enabled: true, displayName: "Excel 2016" },
+    { filePath: "C:\\ICO\\FSCapture.lnk", delay: 0, comment: "", arguments: "", enabled: true, displayName: "FSCapture" },
+  ];
+  renderStartupList();
+  updateStartupBtn();
+}
+
+// 全局禁用浏览器默认右键菜单（C#端已设置AreDefaultContextMenusEnabled=false，这里双重保险）
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+});
+
+</script>
+</body>
+</html>

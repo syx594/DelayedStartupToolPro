@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DelayedStartupTool 图形启动 UI</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: rgba(0,0,0,0.01);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "微软雅黑", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    position: relative;
+  }
+
+  .bg, .grid, .blob { display: none; }
+
+  .splash {
+    position: relative;
+    width: 420px;
+    height: 84px;
+    background:
+      radial-gradient(135% 95% at 12% -25%, rgba(56,189,248,.30), transparent 55%),
+      radial-gradient(120% 95% at 112% 125%, rgba(168,85,247,.24), transparent 55%),
+      linear-gradient(135deg, rgba(38,52,78,.60) 0%, rgba(30,40,60,.58) 45%, rgba(20,26,40,.64) 100%);
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.10) inset;
+    padding: 12px 18px 12px;
+    overflow: hidden;
+    cursor: default;
+    z-index: 2;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .splash::before {
+    content: ""; position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
+    background: radial-gradient(85% 55% at 50% 0%, rgba(255,255,255,.10), transparent 70%);
+    z-index: 1;
+  }
+
+  .splash::after {
+    content: ""; position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.4px);
+    background-size: 14px 14px;
+    opacity: .55; z-index: 1;
+    -webkit-mask: radial-gradient(125% 125% at 50% 50%, #000 55%, transparent 100%);
+            mask: radial-gradient(125% 125% at 50% 50%, #000 55%, transparent 100%);
+  }
+
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px; position: relative; z-index: 4;
+  }
+
+  .title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #4db8ff;
+    letter-spacing: .3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .close-btn {
+    width: 22px; height: 22px; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    font-size: 16px; line-height: 1; cursor: pointer;
+    opacity: 0;
+    transform: scale(.85);
+    -webkit-transform: scale(.85);
+    transition: opacity .2s ease, transform .2s ease, background .15s;
+    -webkit-transition: opacity .2s ease, -webkit-transform .2s ease, background .15s;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 10;
+    pointer-events: auto;
+  }
+
+  .splash:hover .close-btn {
+    opacity: 1;
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+
+  .close-btn:hover {
+    background: rgba(239,68,68,.9) !important;
+    border-color: rgba(239,68,68,.9) !important;
+  }
+
+  @property --ring-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+
+  .ring {
+    position: absolute; inset: 0; border-radius: 12px;
+    padding: 2px;
+    background: conic-gradient(from var(--ring-angle),
+      rgba(56,189,248,0) 0deg,
+      rgba(56,189,248,.65) 22deg,
+      rgba(255,255,255,.85) 32deg,
+      rgba(168,85,247,.65) 42deg,
+      rgba(56,189,248,0) 58deg,
+      rgba(56,189,248,0) 360deg);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: ringRotate 3s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  @keyframes ringRotate {
+    to { --ring-angle: 360deg; }
+  }
+
+  .info {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: #e2e8f0; margin-bottom: 6px; position: relative; z-index: 4;
+  }
+
+  .info .file { color: #fff; font-weight: 600; max-width: 260px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+  .info .sec { color: #4ade80; font-weight: 700; font-size: 13px; }
+
+  .bar-wrap {
+    width: 100%; height: 10px; background: #1b2026; border-radius: 6px;
+    overflow: hidden; position: relative; z-index: 4;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.05);
+  }
+
+  .bar {
+    height: 100%; width: 0%; border-radius: 8px;
+    background: linear-gradient(90deg, #16a34a 0%, #22c55e 45%, #4ade80 100%);
+    transition: width .25s linear;
+    -webkit-transition: width .25s linear;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glow {
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(77,184,255,.5), transparent);
+    animation: scan 2.5s linear infinite; z-index: 3;
+  }
+
+  @keyframes scan {
+    0% { transform: translateX(-100%); -webkit-transform: translateX(-100%); }
+    100% { transform: translateX(100%); -webkit-transform: translateX(100%); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="grid"></div>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+
+<div class="splash" id="splash">
+  <div class="ring"></div>
+  <div class="glow"></div>
+  <div class="top">
+    <div class="title" id="title">DelayedStartupTool... (1/1)</div>
+    <button class="close-btn" id="closeBtn" title="关闭">×</button>
+  </div>
+  <div class="info">
+    <span>正在启动: <span class="file" id="fileName">准备启动...</span></span>
+    <span class="sec" id="sec">0s</span>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar" id="bar"></div>
+  </div>
+</div>
+
+<script>
+  var current = 1;
+  var total = 1;
+  var remaining = 0;
+  var maxDelay = 0;
+  var isClosing = false;
+
+  var titleEl = document.getElementById('title');
+  var fileEl = document.getElementById('fileName');
+  var secEl = document.getElementById('sec');
+  var barEl = document.getElementById('bar');
+  var splashEl = document.getElementById('splash');
+  var closeBtn = document.getElementById('closeBtn');
+
+  function updateUI() {
+    var progress = 0;
+    if (maxDelay > 0) {
+      progress = ((current - 1) / total) * 100 + ((maxDelay - remaining) / maxDelay) * (100 / total);
+    } else {
+      progress = (current / total) * 100;
+    }
+    barEl.style.width = Math.min(100, Math.max(0, progress)) + '%';
+    titleEl.textContent = 'DelayedStartupTool... (' + current + '/' + total + ')';
+    secEl.textContent = remaining + 's';
+  }
+
+  closeBtn.onmouseenter = function() {
+    closeBtn.style.opacity = '1';
+    closeBtn.style.transform = 'scale(1)';
+  };
+
+  closeBtn.onmouseleave = function() {
+    closeBtn.style.opacity = '1';
+    closeBtn.style.transform = 'scale(1)';
+  };
+
+  closeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (isClosing) return;
+    isClosing = true;
+
+    splashEl.style.transition = 'opacity .25s ease, transform .25s ease';
+    splashEl.style.opacity = '0';
+    splashEl.style.transform = 'scale(.96)';
+
+    setTimeout(function() {
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage('close');
+      }
+    }, 100);
+  });
+
+  function handleMessage(data) {
+    try {
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
+
+      if (data.action === 'update') {
+        current = data.current || 1;
+        total = data.total || 1;
+        fileEl.textContent = data.fileName || '准备启动...';
+        remaining = data.delay || 0;
+        maxDelay = data.maxDelay || data.delay || 0;
+        updateUI();
+      } else if (data.action === 'tick') {
+        remaining = data.remaining || 0;
+        current = data.current || current;
+        total = data.total || total;
+        updateUI();
+      }
+    } catch (e) {
+      console.error('Message parse error:', e);
+    }
+  }
+
+  function sendReady() {
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage('ready');
+    }
+  }
+
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener('message', function(event) {
+      handleMessage(event.data);
+    });
+  }
+
+  window.addEventListener('message', function(event) {
+    handleMessage(event.data);
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', sendReady);
+  } else {
+    setTimeout(sendReady, 100);
+  }
+</script>
+
+</body>
+</html>
