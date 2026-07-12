@@ -34,3 +34,14 @@
 
 #### 一句话总结
 不是让你删程序，而是让它们**排队启动**——开机快一点，电脑稳一点。
+
+<img width="703" height="599" alt="DelayedStartupToolPro" src="https://github.com/user-attachments/assets/d9254c29-a8b5-4d52-9895-674c1f36990a" />
+<img width="1413" height="528" alt="DelayedStartupToolPro00" src="https://github.com/user-attachments/assets/4fee60d1-95a8-4060-8dcd-2b3e75f22152" />
+<img width="1413" height="528" alt="DelayedStartupToolPro02" src="https://github.com/user-attachments/assets/7fa6340e-c4f4-4465-9d32-919fcc6c134a" />
+<img width="1413" height="528" alt="DelayedStartupToolPro03" src="https://github.com/user-attachments/assets/6572df6c-ebe8-45ea-a6b9-6e0ad01d469e" />
+<img width="1413" height="528" alt="DelayedStartupToolPro04" src="https://github.com/user-attachments/assets/ee14bb7e-3506-4efe-bc41-7bdfeeaac613" />
+
+## 系统要求
+操作系统：Windows 10 / Windows 11（仅 x64 架构；ARM 设备可经 x64 仿真运行，但官方只提供 x64 构建）
+最低权限：需管理员权限：程序清单已声明 requireAdministrator，每次启动都会弹 UAC 提权、以管理员身份运行；修改计划任务 / 系统级启动项 / 注册表 Run 键等敏感操作天然具备权限，无需额外右键提权
+
