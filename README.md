@@ -47,14 +47,14 @@
 
 最低权限：需管理员权限：程序清单已声明 requireAdministrator，每次启动都会弹 UAC 提权、以管理员身份运行；修改计划任务 / 系统级启动项 / 注册表 Run 键等敏感操作天然具备权限，无需额外右键提权
 
-### 关于 SmartScreen / 杀软拦截（发布时请告知下载者）
+### 关于 SmartScreen / 杀软拦截
 
 - 当前程序使用**自签名证书**（作者自签），**不受 Windows SmartScreen 信任**。
 - 表现：首次运行 / 下载后可能被 SmartScreen 拦一道，提示“Windows 已保护你的电脑”或“未知发布者”。
 - 解决：点击“**仍要运行**” / “更多信息 → 仍要运行”即可，不影响功能。
 - 想彻底消除拦截：需用正规 CA 颁发的代码签名证书（.pfx）重签——把证书路径和密码设为环境变量 `SIGN_PFX` / `SIGN_PWD` 后重跑 `publish.bat` 即可自动签名。
 
-### 常见问题 FAQ（可直接贴到下载页）
+### 常见问题 FAQ
 
 **Q：打不开，提示缺少 .NET 运行库？**
 A：你用的是“框架依赖版”，请到 <https://dotnet.microsoft.com/download/dotnet/8.0> 装 “Windows Desktop Runtime 8.0.x (x64)”；或改用“自包含版”（自带运行库，体积大但免装）。
